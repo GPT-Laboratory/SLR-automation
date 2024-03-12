@@ -1,15 +1,12 @@
-// Filename - App.js
-
-// Importing modules
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import "./App.css";
 import { RQicon } from './mysvg'
-import { Anchor, Button, Divider, Form, Input, Layout, Space, Table, Typography, notification } from "antd";
+import { Button, Divider, Form, Input, Layout, Space, Table, notification } from "antd";
 import { Content, Footer, Header } from "antd/es/layout/layout";
-import { SearchOutlined, TruckFilled } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 import TextArea from "antd/es/input/TextArea";
 import FullPageLoader from "./FullPageLoader";
-//const api_url = "http://localhost:5000/";
+import { answers, columns, filterColumns, paperColumns } from "./columns";
 
 function App() {
     const [loading, setLoading] = useState(false)
@@ -44,7 +41,12 @@ function App() {
                 })
             });
             const message = await response.json();
-            setSearchString(message.search_string.replace(/^\d+\.\s*/, '').replace(/\bAND\b/g, 'OR'))
+            setSearchString(
+                message.search_string
+                  .replace(/^\d+\.\s*/, '') // Remove any leading digits and dots
+                  .replace(/\bAND\b/g, 'OR') // Replace "AND" with "OR"
+                  .replace(/[()]/g, '') // Remove parentheses
+              );
             setLoading(false)
             scrollToBottom()
             notification.success({
@@ -125,54 +127,18 @@ function App() {
             })
         }
     };
-    const columns = [
-        {
-            title: 'No',
-            dataIndex: 'index',
-            key: 'index',
-            width: 80,
-            render: (text, record, index) => index + 1, // Renders the row number
-          },
-        {
-            title: 'Purpose',
-            dataIndex: 'purpose',
-            key: 'purpose',
-            width: 500
-        },
-        {
-            title: 'Question',
-            dataIndex: 'question',
-            key: 'question',
-            width: 500
-        },
-    ];
 
+    const [papersFilterData, setPapersFilterData] = useState([])
+    const handleCheckboxChange = (key) => {
+        const newpapersFilterData = [...papersFilterData];
+        if (newpapersFilterData.includes(key)) {
+          newpapersFilterData.splice(newpapersFilterData.indexOf(key), 1);
+        } else {
+          newpapersFilterData.push(key);
+        }
+        setPapersFilterData(newpapersFilterData);
+      };
 
-
-
-    const paperColumns = [
-        {
-            title: 'No',
-            dataIndex: 'index',
-            key: 'index',
-            width: 80,
-            render: (text, record, index) => index + 1, // Renders the row number
-          },
-        { title: 'Title', dataIndex: 'title', key: 'title', width: 200 },
-        { title: 'Author', dataIndex: 'creator', key: 'creator', width: 100 },
-
-        { title: 'Publication URL', dataIndex: 'link', key: 'link', width: 400 },
-        { title: 'Journal Name', dataIndex: 'publicationName', key: 'publicationName', width: 200 },
-        { title: 'DOI', dataIndex: 'doi', key: 'doi', width: 200 },
-        { title: 'Paper Type', dataIndex: 'aggregationType', key: 'aggregationType', width: 150 },
-        { title: 'Affiliation Country', dataIndex: 'affiliation-country', key: 'affiliation-country', width: 100 },
-        { title: 'Affiliation Name', dataIndex: 'affilname', key: 'affilname', width: 200 },
-        { title: 'Volume', dataIndex: 'volume', key: 'volume', width: 90 },
-        { title: 'Publication Year', dataIndex: 'year', key: 'year', width: 90 },
-        { title: 'Open Access', dataIndex: 'openaccess', key: 'openaccess', render: text => text ? 'Yes' : 'No', width: 150 }, // Assuming openaccess is a boolean
-    ];
-
-    const [papersFilterData, setPapersFilterData] = useState()
     const fetchAndFilterPapers = async (e) => {
         e.preventDefault();
         try {
@@ -188,9 +154,10 @@ function App() {
                 })
             });
             const message = await response.json();
-            console.log("message:", message)
             if (message) {
-                setPapersFilterData(message.filtered_papers)
+                const newFilteredPapers = message.filtered_papers;
+                const combinedArray = [...new Set([...papersFilterData, ...newFilteredPapers])];
+                setPapersFilterData(combinedArray);
             }
             scrollToBottom()
             setLoading(false)
@@ -206,28 +173,6 @@ function App() {
         }
     }
 
-
-    const answers = [
-        {
-            title: 'No',
-            dataIndex: 'index',
-            key: 'index',
-            width: 80,
-            render: (text, record, index) => index + 1, // Renders the row number
-          },
-        {
-            title: 'Question',
-            dataIndex: 'question',
-            key: 'question',
-            width: 280
-        },
-        {
-            title: 'Answer',
-            dataIndex: 'answer',
-            key: 'answer',
-        },
-    ];
-
     const [ansWithQuestions, setAnsWithQuestionsData] = useState()
     const ansWithQuestionsData = async (e) => {
         e.preventDefault();
@@ -240,7 +185,7 @@ function App() {
                 },
                 body: JSON.stringify({
                     questions: researchQuestions,
-                    papers_info: papersFilterData
+                    papers_info: [...new Set([...papersFilterData, ...papersFilterData])]
                 })
             });
             const message = await response.json();
@@ -263,7 +208,6 @@ function App() {
     }
     const [summary, setSummary] = useState()
     const [introSummary, setIntroSummary] = useState()
-    const [allSummary, setAllSummary] = useState()
     const generateSummaryAbstract = async (e) =>{
         e.preventDefault()
         setLoading(true)
@@ -321,7 +265,6 @@ function App() {
             console.log("error:", error)
         }
     }
-
     const [downloadlink, setDownloadLink] = useState()
     const generateAllSummary = async (e) =>{
         e.preventDefault()
@@ -357,9 +300,6 @@ function App() {
             console.log("error:", error)
         }
     }
-    useEffect(() => {
-        console.log("searchString:", searchString)
-    }, [searchString])
     const handleTextareaChange = (event) => {
         const newText = event.target.value;
         const modifiedString = newText.replace(/^Question \d+: /gm, '');
@@ -376,11 +316,8 @@ function App() {
             setSearchString(event.target.value);
         }
     };
-
-
     return (
         <Layout>
-            {/* paddingLeft:"5px", paddingRight:"5px" */}
             <Header style={{ backgroundColor: "#f3fff3", }} >
                 <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginLeft: "0px" }}>
                     <div>
@@ -418,30 +355,40 @@ function App() {
                                 {/* <div style={{textAlign:"center"}}><RQicon width={"100px"} height={"100px"} /></div> */}
                                 <h5>Hello, I am your Agent, Enter Your Research Objective.</h5>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', width: "80vw", border: '1px solid #ccc', padding: 15,marginBottom:5, borderRadius: "10px" }}>
-                                <Input
-                                    placeholder="Ask me anything..."
-                                    style={{ flex: 1 }}
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                />
-                                <Input
-                                    placeholder="Number of Questions"
-                                    min={1}
-                                    max={5}
-                                    style={{ marginLeft: 5, width: 120 }}
-                                    value={noOfQuestion}
-                                    onChange={(e) => setNoOfQuestions(e.target.value)}
-                                    type="number" // This ensures only numbers can be entered
-                                />
-                                <Button
-                                    type="primary"
-                                    icon={<SearchOutlined />}
-                                    style={{ marginLeft: 10 }}
-                                    onClick={handleSubmit}
-                                >
-                                    Search
-                                </Button>
+                            <div style={{ display: 'flex', alignItems: 'center', width: "80vw", border: '1px solid #ccc', padding: 15, marginBottom: 5, borderRadius: "10px" }}>
+                                <Form layout="vertical" style={{ width: "100%", display: "flex", alignItems: "center" }}>
+
+                                    <Form.Item label="Objective" style={{ flex: "1 1 70%", marginRight: '5px' }}>
+                                        <Input
+                                            placeholder="Ask me anything..."
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                        />
+                                    </Form.Item>
+
+                                    <Form.Item label="No of Questions" style={{ flex: 1, marginRight: '5px' }}>
+                                        <Input
+                                            placeholder="Number of Questions"
+                                            min={1}
+                                            max={5}
+                                            value={noOfQuestion}
+                                            onChange={(e) => setNoOfQuestions(e.target.value)}
+                                            type="number"
+                                        />
+                                    </Form.Item>
+
+                                    <Form.Item style={{marginBottom:"-4px"}}>
+                                        <Button
+                                            type="primary"
+                                            icon={<SearchOutlined />}
+                                            onClick={handleSubmit}
+                                        >
+                                            Search
+                                        </Button>
+                                    </Form.Item>
+
+                                </Form>
+
                             </div>
                         </div>
                                 {researchQuestionApiResponse &&
@@ -496,17 +443,17 @@ function App() {
                                         <Table scroll={{
                                             x: 1500,
                                             y: 450,
-                                        }} style={{ width: "100%" }} dataSource={papersData} columns={paperColumns} pagination={false} />
+                                        }} style={{ width: "100%" }} dataSource={papersData} columns={paperColumns(papersFilterData, handleCheckboxChange)} pagination={false} />
                                         <Button type="primary" style={{ float: "right", marginTop: "10px" }} onClick={fetchAndFilterPapers}>Filter with title</Button>
                                     </Space></>
                             }
 
-                            {papersFilterData && <Space direction="vertical" style={{ width: "100%", padding: "10px 0px" }} >
+                            {(papersFilterData.length >0 || papersFilterData.length >0) && <Space direction="vertical" style={{ width: "100%", padding: "10px 0px" }} >
                                 <Table scroll={{
                                     x: 1500,
                                     y: 450,
-                                }} dataSource={papersFilterData} columns={paperColumns} pagination={false} />
-                                <Button type="primary" style={{ float: "right", marginTop: "10px" }} onClick={ansWithQuestionsData}>Find Answers of Each Question </Button>
+                                }} dataSource={[...new Set([...papersFilterData, ...papersFilterData])]} columns={filterColumns} pagination={false} />
+                                {(papersFilterData.length > 0 || papersFilterData.length > 0) && <Button type="primary" style={{ float: "right", marginTop: "10px" }} onClick={ansWithQuestionsData}>Find Answers of Each Question </Button>}
                             </Space>}
                             {ansWithQuestions &&
                                 <Space direction="vertical" style={{ width: "100%", padding: "10px 0px" }}>

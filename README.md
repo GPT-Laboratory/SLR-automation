@@ -1,6 +1,6 @@
 # Flask and React Project
 
-This project combines a Flask backend with a React frontend to create a web application for generating and summarizing research-related content. Mainly based on open AI and scopus api.
+This project combines a Flask backend with a React frontend to create a web application for generating and summarizing research-related content.
 
 ## Getting Started
 
@@ -19,8 +19,7 @@ This project combines a Flask backend with a React frontend to create a web appl
 
 1. Install Python dependencies for the Flask backend:
 cd slr_automation
-pip install -r requirements.txt or you can install those packages only pip install python-dotenv, flask, scholarly, requests flask_cors
-
+pip install -r requirements.txt
 2. Install Node.js dependencies for the React frontend:
 cd slr_automation
 npm install
@@ -38,12 +37,4 @@ run "npm run dev"
 access localhost:5173 in browser
 
 # Additional Information
-
 Make sure to set up any necessary environment variables in a .env file (not included in the repository for security reasons). Refer to the Flask app code for specific environment variables.
-
-How to create Virtual environment ?
-
-```bash
-python3 -m venv venv  # Create a virtual environment
-source venv/bin/activate  # Activate the virtual environment (Linux/Mac)
-venv\Scripts\activate  # Activate the virtual environment (Windows)

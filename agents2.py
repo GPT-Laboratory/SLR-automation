@@ -17,7 +17,7 @@ def generate_search_string_with_gpt(objective, research_questions):
         "Content-Type": "application/json"
     }
     # Removed the explicit instruction for logical operators
-    combined_prompt = f"Given the research objective: '{objective}', and the following research questions: {', '.join(research_questions)}, generate two concise search string for identifying relevant literature for literature review.Do not include AND, OR and where AND is needed add OR."
+    combined_prompt = f"Given the research objective: '{objective}', and the following research questions: {', '.join(research_questions)}, generate two concise search string for identifying relevant literature for literature review.Do not include OR. Use AND if needed."
     data = {
         "model": "gpt-3.5-turbo",
         "messages": [
